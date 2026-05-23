@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StatusBar, TouchableOpacity, StyleSheet, Animated, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -22,6 +22,7 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import AIChatScreen from './src/screens/AIChatScreen';
 import TransferScreen from './src/screens/TransferScreen';
 import BudgetManagerScreen from './src/screens/BudgetManagerScreen';
+import OnboardingScreen from './src/screens/OnboardingScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -139,8 +140,18 @@ function EmptyTabScreen() {
 
 function AppNavigator() {
   const { user } = useUser();
+  const [showOnboarding, setShowOnboarding] = useState(true);
 
   useEffect(() => { initDB(); }, []);
+
+  if (showOnboarding) {
+    return (
+      <>
+        <StatusBar barStyle="dark-content" />
+        <OnboardingScreen onFinish={() => setShowOnboarding(false)} />
+      </>
+    );
+  }
 
   return (
     <NavigationContainer>
