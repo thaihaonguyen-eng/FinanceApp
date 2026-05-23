@@ -40,5 +40,5 @@ export default function RegisterScreen({ navigation }) {
 const styles = StyleSheet.create({
   authOverlay: { backgroundColor: 'rgba(255, 255, 255, 0.68)' },
   input: { width: '100%', backgroundColor: '#F1F5F9', padding: 22, borderRadius: 22, marginBottom: 15, fontSize: 17, fontWeight: '700' },
-  btn: { width: '100%', backgroundColor: '#4F46E5', padding: 24, borderRadius: 22, alignItems: 'center', marginTop: 15, elevation: 5 }
+  btn: { width: '100%', backgroundColor: '#4F46E5', padding: 24, borderRadius: 22, alignItems: 'center', marginTop: 15, shadowColor: '#4F46E5', shadowOpacity: 0.35, shadowOffset: { width: 0, height: 6 }, shadowRadius: 12, elevation: 5 }
 });

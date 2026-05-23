@@ -144,7 +144,7 @@ export default function GoalManagerScreen({ navigation }) {
               Đang có {selectedGoal?.saved_amount.toLocaleString()}đ / {selectedGoal?.target_amount.toLocaleString()}đ. Chọn ví nguồn:
             </Text>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{maxHeight: 55, marginBottom: 15}}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginBottom: 15}}>
               {wallets.map(w => (
                 <TouchableOpacity key={w.id} onPress={()=>setSelWal(w.id)} style={[styles.chipWal, selWal===w.id && {borderColor: '#4F46E5', backgroundColor: '#EEF2FF'}]}>
                   <Ionicons name={w.icon} size={18} color={w.color} style={{marginRight:5}}/>
@@ -178,10 +178,10 @@ const styles = StyleSheet.create({
   header: {padding: 25, flexDirection: 'row', alignItems: 'center'}, 
   title: {fontSize: 26, fontWeight: '900', marginLeft: 15, color: '#0F172A'},
   input: { backgroundColor: '#FFF', padding: 20, borderRadius: 20, marginBottom: 15, fontSize: 17, fontWeight: '700', borderWidth: 1, borderColor: '#E2E8F0' }, 
-  btn: { backgroundColor: '#8B5CF6', padding: 20, borderRadius: 20, alignItems: 'center', marginBottom: 15, elevation: 5 },
-  item: { backgroundColor: '#FFF', padding: 25, borderRadius: 25, marginBottom: 15, elevation: 4, borderWidth: 1, borderColor: '#F8FAFC' },
+  btn: { backgroundColor: '#8B5CF6', padding: 20, borderRadius: 20, alignItems: 'center', marginBottom: 15, shadowColor: '#8B5CF6', shadowOpacity: 0.3, shadowOffset: { width: 0, height: 6 }, shadowRadius: 10, elevation: 5 },
+  item: { backgroundColor: '#FFF', padding: 25, borderRadius: 25, marginBottom: 15, shadowColor: '#000', shadowOpacity: 0.08, shadowOffset: { width: 0, height: 8 }, shadowRadius: 15, elevation: 4, borderWidth: 1, borderColor: '#F8FAFC' },
   chipWal: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', borderWidth: 2, borderColor: '#E2E8F0', paddingHorizontal: 18, paddingVertical: 12, borderRadius: 20, marginRight: 10 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.7)', justifyContent: 'flex-end' },
   modalContent: { backgroundColor: '#FFF', padding: 30, borderTopLeftRadius: 40, borderTopRightRadius: 40, paddingBottom: 50 },
-  depositBtn: { backgroundColor: '#10B981', padding: 22, borderRadius: 20, alignItems: 'center', marginTop: 10, elevation: 5 }
+  depositBtn: { backgroundColor: '#10B981', padding: 22, borderRadius: 20, alignItems: 'center', marginTop: 10, shadowColor: '#10B981', shadowOpacity: 0.3, shadowOffset: { width: 0, height: 5 }, shadowRadius: 8, elevation: 5 }
 });

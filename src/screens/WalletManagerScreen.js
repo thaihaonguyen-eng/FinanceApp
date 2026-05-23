@@ -81,7 +81,7 @@ export default function WalletManagerScreen({ navigation }) {
 }
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' }, header: {padding: 25, flexDirection: 'row', alignItems: 'center'}, title: {fontSize: 26, fontWeight: '900', marginLeft: 15, color: '#0F172A'},
-  input: { backgroundColor: '#FFF', padding: 22, borderRadius: 22, marginBottom: 15, fontSize: 17, fontWeight: '700', borderWidth: 1, borderColor: '#E2E8F0' }, btn: { backgroundColor: '#0F172A', padding: 22, borderRadius: 22, alignItems: 'center', marginBottom: 15 },
-  item: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 25, borderRadius: 25, marginBottom: 15, elevation: 3 },
+  input: { backgroundColor: '#FFF', padding: 22, borderRadius: 22, marginBottom: 15, fontSize: 17, fontWeight: '700', borderWidth: 1, borderColor: '#E2E8F0' }, btn: { backgroundColor: '#0F172A', padding: 22, borderRadius: 22, alignItems: 'center', marginBottom: 15, shadowColor: '#0F172A', shadowOpacity: 0.25, shadowOffset: { width: 0, height: 6 }, shadowRadius: 12, elevation: 6 },
+  item: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 25, borderRadius: 25, marginBottom: 15, shadowColor: '#000', shadowOpacity: 0.08, shadowOffset: { width: 0, height: 8 }, shadowRadius: 15, elevation: 3 },
   sharedTag: { backgroundColor: '#F43F5E', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }
 });

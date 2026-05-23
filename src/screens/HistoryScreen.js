@@ -177,8 +177,8 @@ export default function HistoryScreen({ navigation }) {
 }
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' }, title: { fontSize: 36, fontWeight: '900', marginHorizontal: 25, marginBottom: 20, marginTop: 20, color: '#0F172A' },
-  searchBar: { flexDirection: 'row', backgroundColor: '#FFF', marginHorizontal: 25, padding: 22, borderRadius: 30, alignItems: 'center', marginBottom: 25, elevation: 6 }, searchInput: { flex: 1, marginLeft: 15, fontSize: 17, fontWeight: '700' },
-  item: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 22, borderRadius: 30, marginBottom: 15, elevation: 4 }, iconBox: { width: 56, height: 56, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
+  searchBar: { flexDirection: 'row', backgroundColor: '#FFF', marginHorizontal: 25, padding: 22, borderRadius: 30, alignItems: 'center', marginBottom: 25, shadowColor: '#000', shadowOpacity: 0.06, shadowOffset: { width: 0, height: 5 }, shadowRadius: 10, elevation: 6 }, searchInput: { flex: 1, marginLeft: 15, fontSize: 17, fontWeight: '700' },
+  item: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 22, borderRadius: 30, marginBottom: 15, shadowColor: '#000', shadowOpacity: 0.06, shadowOffset: { width: 0, height: 6 }, shadowRadius: 12, elevation: 4 }, iconBox: { width: 56, height: 56, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
   itemTitle: { fontSize: 18, fontWeight: '900', color: '#1E293B' }, itemDate: { fontSize: 13, color: '#64748B', marginTop: 6, fontWeight: '600' }, itemAmount: { fontSize: 19, fontWeight: '900' },
   
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.7)', justifyContent: 'flex-end' },

@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' }, container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 35 },
   title: { fontSize: 34, fontWeight: '900', color: '#1E293B', marginVertical: 30, letterSpacing: -1 },
   input: { width: '100%', backgroundColor: '#F1F5F9', padding: 22, borderRadius: 22, marginBottom: 15, fontSize: 17, fontWeight: '700' },
-  btn: { width: '100%', backgroundColor: '#4F46E5', padding: 24, borderRadius: 22, alignItems: 'center', marginTop: 15, elevation: 5 },
+  btn: { width: '100%', backgroundColor: '#4F46E5', padding: 24, borderRadius: 22, alignItems: 'center', marginTop: 15, shadowColor: '#4F46E5', shadowOpacity: 0.35, shadowOffset: { width: 0, height: 6 }, shadowRadius: 12, elevation: 5 },
   btnText: { color: '#FFF', fontWeight: '900', fontSize: 16 },
   bioBtn: { width: '100%', backgroundColor: '#EEF2FF', padding: 20, borderRadius: 22, alignItems: 'center', marginTop: 15, flexDirection: 'row', justifyContent: 'center', borderWidth: 2, borderColor: '#C7D2FE' },
   bioText: { color: '#4F46E5', fontWeight: '800', marginLeft: 10 }, link: { marginTop: 25, color: '#64748B', fontWeight: '700' }

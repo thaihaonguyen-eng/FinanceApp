@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, SafeAreaView, Image } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, SafeAreaView, Image, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { db, getFormattedDate } from '../services/db';
@@ -105,34 +105,36 @@ export default function AddTransactionScreen({ navigation }) {
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.safeArea}>
-        <View style={{padding: 25, flex: 1}}>
-        <View style={styles.header}><Text style={styles.title}>Tạo Giao Dịch</Text><TouchableOpacity onPress={()=>navigation.goBack()}><Ionicons name="close-circle" size={36} color="#94A3B8"/></TouchableOpacity></View>
-        <View style={{flexDirection: 'row', marginBottom: 25}}>
-          <TouchableOpacity onPress={()=>setType('income')} style={[styles.typeBtn, type==='income' && styles.typeInc]}><Text style={[styles.typeText, {color: type==='income'?'#059669':'#64748B'}]}>THU</Text></TouchableOpacity>
-          <TouchableOpacity onPress={()=>setType('expense')} style={[styles.typeBtn, type==='expense' && styles.typeExp]}><Text style={[styles.typeText, {color: type==='expense'?'#E11D48':'#64748B'}]}>CHI</Text></TouchableOpacity>
-          <TouchableOpacity onPress={()=>setType('savings')} style={[styles.typeBtn, type==='savings' && styles.typeSav]}><Text style={[styles.typeText, {color: type==='savings'?'#4F46E5':'#64748B'}]}>TIẾT KIỆM</Text></TouchableOpacity>
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{maxHeight: 55, marginBottom: 15}}>{(type === 'savings' ? goals : cats).map(c => (<TouchableOpacity key={c.id} onPress={()=>setSelCat(c.id)} style={[styles.chip, selCat===c.id && {backgroundColor: c.color}]}><Ionicons name={c.icon} size={18} color={selCat===c.id?'#FFF':'#64748B'} style={{marginRight:5}}/><Text style={{color: selCat===c.id?'#FFF':'#64748B', fontWeight: '800'}}>{c.name}</Text></TouchableOpacity>))}</ScrollView>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{maxHeight: 55, marginBottom: 25}}>{wallets.map(w => (<TouchableOpacity key={w.id} onPress={()=>setSelWal(w.id)} style={[styles.chipWal, selWal===w.id && {borderColor: '#4F46E5', backgroundColor: '#EEF2FF'}]}><Ionicons name={w.icon} size={18} color={w.color} style={{marginRight:5}}/><Text style={{color: '#1E293B', fontWeight: '800'}}>{w.name}</Text></TouchableOpacity>))}</ScrollView>
-        <TextInput placeholder={`Số tiền (${wallets.find(w=>w.id===selWal)?.currency || 'VND'})`} keyboardType="numeric" style={styles.input} value={amt} onChangeText={setAmt} />
-        <TextInput placeholder="Nội dung..." style={styles.input} value={note} onChangeText={setNote} />
-        
-        <TouchableOpacity onPress={()=>setShowAdvanced(!showAdvanced)} style={{paddingVertical: 10, alignItems: 'center'}}>
-          <Text style={{color: '#64748B', fontWeight: '700'}}>Tính năng mở rộng (Vị trí, Hóa đơn) <Ionicons name={showAdvanced?"chevron-up":"chevron-down"} /></Text>
-        </TouchableOpacity>
-        {showAdvanced && (
-          <View style={{backgroundColor: '#F8FAFC', padding: 15, borderRadius: 20, marginBottom: 15}}>
-             <TextInput placeholder="Địa điểm (Ví dụ: Highlands Coffee)..." style={[styles.input, {backgroundColor: '#FFF'}]} value={location} onChangeText={setLocation} />
-             <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 15, borderRadius: 20}} onPress={pickImage}>
-               <Ionicons name="camera" size={24} color="#4F46E5" style={{marginRight: 10}}/>
-               <Text style={{color: '#1E293B', fontWeight: '700', flex: 1}}>{imageUri ? 'Đã đính kèm ảnh' : 'Đính kèm ảnh hóa đơn'}</Text>
-               {imageUri && <Image source={{uri: imageUri}} style={{width: 40, height: 40, borderRadius: 10}}/>}
-             </TouchableOpacity>
-          </View>
-        )}
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{flex: 1}}>
+          <ScrollView contentContainerStyle={{padding: 25, flexGrow: 1}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <View style={styles.header}><Text style={styles.title}>Tạo Giao Dịch</Text><TouchableOpacity onPress={()=>navigation.goBack()}><Ionicons name="close-circle" size={36} color="#94A3B8"/></TouchableOpacity></View>
+            <View style={{flexDirection: 'row', marginBottom: 25}}>
+              <TouchableOpacity onPress={()=>setType('income')} style={[styles.typeBtn, type==='income' && styles.typeInc]}><Text style={[styles.typeText, {color: type==='income'?'#059669':'#64748B'}]}>THU</Text></TouchableOpacity>
+              <TouchableOpacity onPress={()=>setType('expense')} style={[styles.typeBtn, type==='expense' && styles.typeExp]}><Text style={[styles.typeText, {color: type==='expense'?'#E11D48':'#64748B'}]}>CHI</Text></TouchableOpacity>
+              <TouchableOpacity onPress={()=>setType('savings')} style={[styles.typeBtn, type==='savings' && styles.typeSav]}><Text style={[styles.typeText, {color: type==='savings'?'#4F46E5':'#64748B'}]}>TIẾT KIỆM</Text></TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginBottom: 15}}>{(type === 'savings' ? goals : cats).map(c => (<TouchableOpacity key={c.id} onPress={()=>setSelCat(c.id)} style={[styles.chip, selCat===c.id && {backgroundColor: c.color}]}><Ionicons name={c.icon} size={18} color={selCat===c.id?'#FFF':'#64748B'} style={{marginRight:5}}/><Text style={{color: selCat===c.id?'#FFF':'#64748B', fontWeight: '800'}}>{c.name}</Text></TouchableOpacity>))}</ScrollView>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginBottom: 25}}>{wallets.map(w => (<TouchableOpacity key={w.id} onPress={()=>setSelWal(w.id)} style={[styles.chipWal, selWal===w.id && {borderColor: '#4F46E5', backgroundColor: '#EEF2FF'}]}><Ionicons name={w.icon} size={18} color={w.color} style={{marginRight:5}}/><Text style={{color: '#1E293B', fontWeight: '800'}}>{w.name}</Text></TouchableOpacity>))}</ScrollView>
+            <TextInput placeholder={`Số tiền (${wallets.find(w=>w.id===selWal)?.currency || 'VND'})`} keyboardType="numeric" style={styles.input} value={amt} onChangeText={setAmt} />
+            <TextInput placeholder="Nội dung..." style={styles.input} value={note} onChangeText={setNote} />
+            
+            <TouchableOpacity onPress={()=>setShowAdvanced(!showAdvanced)} style={{paddingVertical: 10, alignItems: 'center'}}>
+              <Text style={{color: '#64748B', fontWeight: '700'}}>Tính năng mở rộng (Vị trí, Hóa đơn) <Ionicons name={showAdvanced?"chevron-up":"chevron-down"} /></Text>
+            </TouchableOpacity>
+            {showAdvanced && (
+              <View style={{backgroundColor: '#F8FAFC', padding: 15, borderRadius: 20, marginBottom: 15}}>
+                 <TextInput placeholder="Địa điểm (Ví dụ: Highlands Coffee)..." style={[styles.input, {backgroundColor: '#FFF'}]} value={location} onChangeText={setLocation} />
+                 <TouchableOpacity style={{flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 15, borderRadius: 20}} onPress={pickImage}>
+                   <Ionicons name="camera" size={24} color="#4F46E5" style={{marginRight: 10}}/>
+                   <Text style={{color: '#1E293B', fontWeight: '700', flex: 1}}>{imageUri ? 'Đã đính kèm ảnh' : 'Đính kèm ảnh hóa đơn'}</Text>
+                   {imageUri && <Image source={{uri: imageUri}} style={{width: 40, height: 40, borderRadius: 10}}/>}
+                 </TouchableOpacity>
+              </View>
+            )}
 
-        <TouchableOpacity style={styles.btn} onPress={handleSave}><Text style={{color: '#FFF', fontWeight: '900', fontSize: 17}}>XÁC NHẬN</Text></TouchableOpacity>
-        </View>
+            <TouchableOpacity style={styles.btn} onPress={handleSave}><Text style={{color: '#FFF', fontWeight: '900', fontSize: 17}}>XÁC NHẬN</Text></TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </ScreenBackground>
   );
@@ -141,5 +143,5 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' }, header: {flexDirection: 'row', justifyContent: 'space-between', marginBottom: 25, alignItems: 'center'}, title: {fontSize: 30, fontWeight: '900', color: '#0F172A'},
   typeBtn: { flex: 1, padding: 15, borderRadius: 22, alignItems: 'center', backgroundColor: '#F8FAFC', borderWidth: 2, borderColor: '#F1F5F9', marginHorizontal: 3 }, typeInc: {borderColor:'#10B981', backgroundColor:'#ECFDF5'}, typeExp: {borderColor:'#F43F5E', backgroundColor:'#FFF1F2'}, typeSav: {borderColor:'#4F46E5', backgroundColor:'#EEF2FF'}, typeText: {fontWeight:'900'},
   chip: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F1F5F9', paddingHorizontal: 22, paddingVertical: 14, borderRadius: 20, marginRight: 12 }, chipWal: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', borderWidth: 2, borderColor: '#E2E8F0', paddingHorizontal: 22, paddingVertical: 14, borderRadius: 20, marginRight: 12 },
-  input: { backgroundColor: '#F1F5F9', padding: 22, borderRadius: 22, marginBottom: 15, fontSize: 18, color: '#1E293B', fontWeight: '800' }, btn: { backgroundColor: '#4F46E5', padding: 24, borderRadius: 25, alignItems: 'center', marginTop: 10, elevation: 5 }
+  input: { backgroundColor: '#F1F5F9', padding: 22, borderRadius: 22, marginBottom: 15, fontSize: 18, color: '#1E293B', fontWeight: '800' }, btn: { backgroundColor: '#4F46E5', padding: 24, borderRadius: 25, alignItems: 'center', marginTop: 10, shadowColor: '#4F46E5', shadowOpacity: 0.35, shadowOffset: { width: 0, height: 6 }, shadowRadius: 12, elevation: 5 }
 });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Alert, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { db, getFormattedDate } from '../services/db';
@@ -70,46 +70,48 @@ export default function TransferScreen({ navigation }) {
   return (
     <ScreenBackground>
       <SafeAreaView style={styles.safeArea}>
-        <View style={{padding: 25, flex: 1}}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Chuyển Tiền</Text>
-          <TouchableOpacity onPress={()=>navigation.goBack()}><Ionicons name="close-circle" size={36} color="#94A3B8"/></TouchableOpacity>
-        </View>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{flex: 1}}>
+          <ScrollView contentContainerStyle={{padding: 25, flexGrow: 1}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <View style={styles.header}>
+              <Text style={styles.title}>Chuyển Tiền</Text>
+              <TouchableOpacity onPress={()=>navigation.goBack()}><Ionicons name="close-circle" size={36} color="#94A3B8"/></TouchableOpacity>
+            </View>
 
-        <Text style={styles.label}>Từ ví (Nguồn):</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{maxHeight: 55, marginBottom: 15}}>
-          {wallets.map(w => (
-            <TouchableOpacity key={w.id} onPress={()=>setFromWal(w.id)} style={[styles.chipWal, fromWal===w.id && {borderColor: '#F43F5E', backgroundColor: '#FFF1F2'}]}>
-              <Ionicons name={w.icon} size={18} color={w.color} style={{marginRight:5}}/>
-              <Text style={{color: '#1E293B', fontWeight: '800'}}>{w.name}</Text>
+            <Text style={styles.label}>Từ ví (Nguồn):</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginBottom: 15}}>
+              {wallets.map(w => (
+                <TouchableOpacity key={w.id} onPress={()=>setFromWal(w.id)} style={[styles.chipWal, fromWal===w.id && {borderColor: '#F43F5E', backgroundColor: '#FFF1F2'}]}>
+                  <Ionicons name={w.icon} size={18} color={w.color} style={{marginRight:5}}/>
+                  <Text style={{color: '#1E293B', fontWeight: '800'}}>{w.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <View style={{alignItems: 'center', marginVertical: -10, zIndex: 10}}>
+              <View style={{backgroundColor: '#FFF', padding: 5, borderRadius: 20}}>
+                <Ionicons name="arrow-down-circle" size={30} color="#94A3B8" />
+              </View>
+            </View>
+
+            <Text style={styles.label}>Đến ví (Đích):</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginBottom: 25}}>
+              {wallets.map(w => (
+                <TouchableOpacity key={w.id} onPress={()=>setToWal(w.id)} style={[styles.chipWal, toWal===w.id && {borderColor: '#10B981', backgroundColor: '#ECFDF5'}]}>
+                  <Ionicons name={w.icon} size={18} color={w.color} style={{marginRight:5}}/>
+                  <Text style={{color: '#1E293B', fontWeight: '800'}}>{w.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <TextInput placeholder="Số tiền chuyển..." keyboardType="numeric" style={styles.input} value={amt} onChangeText={setAmt} />
+            <TextInput placeholder="Phí giao dịch (Mặc định: 0)" keyboardType="numeric" style={styles.input} value={fee} onChangeText={setFee} />
+            <TextInput placeholder="Ghi chú..." style={styles.input} value={note} onChangeText={setNote} />
+            
+            <TouchableOpacity style={styles.btn} onPress={handleSave}>
+              <Text style={{color: '#FFF', fontWeight: '900', fontSize: 17}}>THỰC HIỆN CHUYỂN</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        <View style={{alignItems: 'center', marginVertical: -10, zIndex: 10}}>
-          <View style={{backgroundColor: '#FFF', padding: 5, borderRadius: 20}}>
-            <Ionicons name="arrow-down-circle" size={30} color="#94A3B8" />
-          </View>
-        </View>
-
-        <Text style={styles.label}>Đến ví (Đích):</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{maxHeight: 55, marginBottom: 25}}>
-          {wallets.map(w => (
-            <TouchableOpacity key={w.id} onPress={()=>setToWal(w.id)} style={[styles.chipWal, toWal===w.id && {borderColor: '#10B981', backgroundColor: '#ECFDF5'}]}>
-              <Ionicons name={w.icon} size={18} color={w.color} style={{marginRight:5}}/>
-              <Text style={{color: '#1E293B', fontWeight: '800'}}>{w.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        <TextInput placeholder="Số tiền chuyển..." keyboardType="numeric" style={styles.input} value={amt} onChangeText={setAmt} />
-        <TextInput placeholder="Phí giao dịch (Mặc định: 0)" keyboardType="numeric" style={styles.input} value={fee} onChangeText={setFee} />
-        <TextInput placeholder="Ghi chú..." style={styles.input} value={note} onChangeText={setNote} />
-        
-        <TouchableOpacity style={styles.btn} onPress={handleSave}>
-          <Text style={{color: '#FFF', fontWeight: '900', fontSize: 17}}>THỰC HIỆN CHUYỂN</Text>
-        </TouchableOpacity>
-        </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </ScreenBackground>
   );
@@ -122,5 +124,5 @@ const styles = StyleSheet.create({
   label: {fontSize: 16, fontWeight: '800', color: '#64748B', marginBottom: 10, marginLeft: 5},
   chipWal: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', borderWidth: 2, borderColor: '#E2E8F0', paddingHorizontal: 22, paddingVertical: 14, borderRadius: 20, marginRight: 12 },
   input: { backgroundColor: '#F1F5F9', padding: 22, borderRadius: 22, marginBottom: 15, fontSize: 18, color: '#1E293B', fontWeight: '800' }, 
-  btn: { backgroundColor: '#0F172A', padding: 24, borderRadius: 25, alignItems: 'center', marginTop: 10, elevation: 5 }
+  btn: { backgroundColor: '#0F172A', padding: 24, borderRadius: 25, alignItems: 'center', marginTop: 10, shadowColor: '#0F172A', shadowOpacity: 0.3, shadowOffset: { width: 0, height: 6 }, shadowRadius: 12, elevation: 5 }
 });

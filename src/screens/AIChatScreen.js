@@ -67,13 +67,13 @@ export default function AIChatScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' },
-  header: { padding: 20, paddingTop: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.92)', shadowColor: '#000', shadowOpacity: 0.05, shadowOffset: {height: 3}, elevation: 3 },
+  header: { padding: 20, paddingTop: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.92)', shadowColor: '#000', shadowOpacity: 0.05, shadowOffset: { width: 0, height: 3 }, shadowRadius: 5, elevation: 3 },
   title: { fontSize: 22, fontWeight: '900', color: '#0F172A' },
   bubble: { maxWidth: '85%', padding: 18, borderRadius: 24, marginBottom: 18, flexDirection: 'row', alignItems: 'flex-start' },
   aiBubble: { alignSelf: 'flex-start', backgroundColor: '#4F46E5', borderBottomLeftRadius: 5 },
-  userBubble: { alignSelf: 'flex-end', backgroundColor: '#FFF', borderBottomRightRadius: 5, borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#000', shadowOpacity: 0.05, shadowOffset: {height: 2}, elevation: 2 },
+  userBubble: { alignSelf: 'flex-end', backgroundColor: '#FFF', borderBottomRightRadius: 5, borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#000', shadowOpacity: 0.05, shadowOffset: { width: 0, height: 2 }, shadowRadius: 5, elevation: 2 },
   msgText: { fontSize: 15, lineHeight: 24, flexShrink: 1 },
   inputArea: { flexDirection: 'row', padding: 20, backgroundColor: '#FFF', borderTopWidth: 1, borderColor: '#F1F5F9', alignItems: 'center' },
   input: { flex: 1, backgroundColor: '#F8FAFC', padding: 18, borderRadius: 30, fontSize: 16, borderWidth: 1, borderColor: '#E2E8F0' },
-  sendBtn: { backgroundColor: '#4F46E5', width: 55, height: 55, borderRadius: 28, justifyContent: 'center', alignItems: 'center', marginLeft: 12, shadowColor: '#4F46E5', shadowOpacity: 0.3, shadowOffset: {height: 3}, elevation: 5 }
+  sendBtn: { backgroundColor: '#4F46E5', width: 55, height: 55, borderRadius: 28, justifyContent: 'center', alignItems: 'center', marginLeft: 12, shadowColor: '#4F46E5', shadowOpacity: 0.35, shadowOffset: { width: 0, height: 4 }, shadowRadius: 8, elevation: 5 }
 });

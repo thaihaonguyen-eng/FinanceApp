@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, SafeAreaView, Alert, Modal } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, SafeAreaView, Alert, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { db, getFormattedMonth } from '../services/db';
@@ -136,7 +136,7 @@ export default function BudgetManagerScreen({ navigation }) {
         />
 
       <Modal visible={showModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={{flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20}}>
               <Text style={{fontSize: 22, fontWeight: '900', color: '#0F172A'}}>Tạo Hạn Mức</Text>
@@ -149,7 +149,7 @@ export default function BudgetManagerScreen({ navigation }) {
               horizontal 
               showsHorizontalScrollIndicator={false}
               keyExtractor={i=>i.id.toString()}
-              style={{maxHeight: 60, marginBottom: 20}}
+              style={{marginBottom: 20}}
               renderItem={({item}) => (
                 <TouchableOpacity onPress={() => setSelCat(item.id)} style={[styles.chip, selCat===item.id && {backgroundColor: item.color}]}>
                   <Ionicons name={item.icon} size={18} color={selCat===item.id?'#FFF':'#64748B'} style={{marginRight:5}}/>
@@ -170,7 +170,7 @@ export default function BudgetManagerScreen({ navigation }) {
               <Text style={{color: '#FFF', fontWeight: '900', fontSize: 16}}>LƯU HẠN MỨC</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
       </SafeAreaView>
     </ScreenBackground>
@@ -181,8 +181,8 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: 'transparent' }, 
   header: {padding: 25, flexDirection: 'row', alignItems: 'center'}, 
   title: {fontSize: 24, fontWeight: '900', marginLeft: 15, color: '#0F172A'},
-  addBtn: { backgroundColor: '#4F46E5', flexDirection: 'row', marginHorizontal: 25, padding: 20, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 20, elevation: 5 },
-  item: { backgroundColor: '#FFF', padding: 25, borderRadius: 25, marginBottom: 15, elevation: 4 },
+  addBtn: { backgroundColor: '#4F46E5', flexDirection: 'row', marginHorizontal: 25, padding: 20, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 20, shadowColor: '#4F46E5', shadowOpacity: 0.3, shadowOffset: { width: 0, height: 6 }, shadowRadius: 10, elevation: 5 },
+  item: { backgroundColor: '#FFF', padding: 25, borderRadius: 25, marginBottom: 15, shadowColor: '#000', shadowOpacity: 0.08, shadowOffset: { width: 0, height: 8 }, shadowRadius: 15, elevation: 4 },
   iconBox: { width: 44, height: 44, borderRadius: 15, justifyContent: 'center', alignItems: 'center' },
   
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.7)', justifyContent: 'flex-end' },
@@ -190,5 +190,5 @@ const styles = StyleSheet.create({
   label: {fontSize: 16, fontWeight: '800', color: '#64748B', marginBottom: 10},
   chip: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F1F5F9', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 20, marginRight: 10 },
   input: { backgroundColor: '#F8FAFC', padding: 20, borderRadius: 20, marginBottom: 15, fontSize: 17, fontWeight: '700', borderWidth: 1, borderColor: '#E2E8F0' }, 
-  btn: { backgroundColor: '#10B981', padding: 22, borderRadius: 20, alignItems: 'center', marginTop: 10, elevation: 5 }
+  btn: { backgroundColor: '#10B981', padding: 22, borderRadius: 20, alignItems: 'center', marginTop: 10, shadowColor: '#10B981', shadowOpacity: 0.3, shadowOffset: { width: 0, height: 5 }, shadowRadius: 8, elevation: 5 }
 });
