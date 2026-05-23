@@ -6,6 +6,7 @@ import { db, getFormattedDate } from '../services/db';
 import { useUser } from '../context/UserContext';
 import * as ImagePicker from 'expo-image-picker';
 import ScreenBackground from '../components/ScreenBackground';
+import { parseMoneyInput } from '../utils/money';
 
 export default function AddTransactionScreen({ navigation }) {
   const { user } = useUser();
@@ -33,11 +34,13 @@ export default function AddTransactionScreen({ navigation }) {
 
   const handleSave = async () => {
     if (!amt || !note) return Alert.alert("Lỗi", "Nhập đủ tiền và nội dung!");
-    const amountVal = parseFloat(amt);
+    const amountVal = parseMoneyInput(amt);
 
     if (isNaN(amountVal) || amountVal <= 0) {
       return Alert.alert("Lỗi", "Số tiền không hợp lệ! Vui lòng nhập số tiền lớn hơn 0.");
     }
+    if (!selWal) return Alert.alert("Lỗi", "Vui lòng tạo hoặc chọn ví trước!");
+    if (type === 'savings' && !selCat) return Alert.alert("Lỗi", "Vui lòng tạo hoặc chọn mục tiêu tiết kiệm!");
 
     if (type !== 'income') {
       const selectedWallet = wallets.find(w => w.id === selWal);
@@ -84,7 +87,7 @@ export default function AddTransactionScreen({ navigation }) {
         return Alert.alert("Thông báo", `Số tiền này vượt quá mục tiêu! Quỹ chỉ còn thiếu ${(selectedGoal.target_amount - selectedGoal.saved_amount).toLocaleString()}đ nữa thôi.`);
       }
       await db.runAsync('UPDATE goals SET saved_amount = saved_amount + ? WHERE id = ?', [amountVal, selCat]);
-      await db.runAsync('INSERT INTO transactions (user_id, wallet_id, category_id, title, amount, type, date, location, image_uri) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [user.id, selWal, null, note, amountVal, type, getFormattedDate(), location, imageUri]);
+      await db.runAsync('INSERT INTO transactions (user_id, wallet_id, category_id, goal_id, title, amount, type, date, location, image_uri) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [user.id, selWal, null, selCat, note, amountVal, type, getFormattedDate(), location, imageUri]);
     } else {
       await doSave(amountVal);
       return;
@@ -94,7 +97,7 @@ export default function AddTransactionScreen({ navigation }) {
   };
 
   const doSave = async (amountVal) => {
-    await db.runAsync('INSERT INTO transactions (user_id, wallet_id, category_id, title, amount, type, date, location, image_uri) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [user.id, selWal, selCat, note, amountVal, type, getFormattedDate(), location, imageUri]);
+    await db.runAsync('INSERT INTO transactions (user_id, wallet_id, category_id, goal_id, title, amount, type, date, location, image_uri) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [user.id, selWal, selCat, null, note, amountVal, type, getFormattedDate(), location, imageUri]);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     navigation.goBack();
   };

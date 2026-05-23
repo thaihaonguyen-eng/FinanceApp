@@ -12,7 +12,7 @@ export const initDB = async () => {
     CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, type TEXT, icon TEXT, color TEXT);
     CREATE TABLE IF NOT EXISTS wallets (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, name TEXT, balance REAL, icon TEXT, color TEXT, currency TEXT DEFAULT 'VND', is_shared INTEGER DEFAULT 0, FOREIGN KEY (user_id) REFERENCES users (id));
     CREATE TABLE IF NOT EXISTS goals (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, name TEXT, target_amount REAL, saved_amount REAL DEFAULT 0, icon TEXT, color TEXT, deadline TEXT, FOREIGN KEY (user_id) REFERENCES users (id));
-    CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, wallet_id INTEGER, category_id INTEGER, title TEXT, amount REAL, type TEXT, date TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users (id), FOREIGN KEY (wallet_id) REFERENCES wallets (id), FOREIGN KEY (category_id) REFERENCES categories (id));
+    CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, wallet_id INTEGER, category_id INTEGER, goal_id INTEGER, title TEXT, amount REAL, type TEXT, date TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users (id), FOREIGN KEY (wallet_id) REFERENCES wallets (id), FOREIGN KEY (category_id) REFERENCES categories (id), FOREIGN KEY (goal_id) REFERENCES goals (id) ON DELETE SET NULL);
     CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
     CREATE TABLE IF NOT EXISTS transfers (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, from_wallet_id INTEGER, to_wallet_id INTEGER, amount REAL, date TEXT, fee REAL DEFAULT 0, note TEXT, FOREIGN KEY (user_id) REFERENCES users (id), FOREIGN KEY (from_wallet_id) REFERENCES wallets (id), FOREIGN KEY (to_wallet_id) REFERENCES wallets (id));
     CREATE TABLE IF NOT EXISTS budgets (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, category_id INTEGER, amount_limit REAL, month_year TEXT, FOREIGN KEY (user_id) REFERENCES users (id), FOREIGN KEY (category_id) REFERENCES categories (id));
@@ -24,6 +24,14 @@ export const initDB = async () => {
         UPDATE wallets SET balance = balance + 
             (CASE WHEN NEW.type = 'income' THEN NEW.amount ELSE -NEW.amount END)
         WHERE id = NEW.wallet_id;
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS update_wallet_after_delete
+    AFTER DELETE ON transactions
+    BEGIN
+        UPDATE wallets SET balance = balance -
+            (CASE WHEN OLD.type = 'income' THEN OLD.amount ELSE -OLD.amount END)
+        WHERE id = OLD.wallet_id;
     END;
 
     CREATE TRIGGER IF NOT EXISTS update_wallet_after_transfer
@@ -55,6 +63,7 @@ export const initDB = async () => {
   try { await db.execAsync("ALTER TABLE transactions ADD COLUMN image_uri TEXT"); } catch (e) {}
   try { await db.execAsync("ALTER TABLE transactions ADD COLUMN note TEXT"); } catch (e) {}
   try { await db.execAsync("ALTER TABLE transactions ADD COLUMN location TEXT"); } catch (e) {}
+  try { await db.execAsync("ALTER TABLE transactions ADD COLUMN goal_id INTEGER"); } catch (e) {}
 
   const cats = await db.getAllAsync('SELECT * FROM categories');
   if (cats.length === 0) {

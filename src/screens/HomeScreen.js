@@ -17,7 +17,7 @@ export default function HomeScreen({ navigation }) {
     if (!user) return;
     setWallets(await db.getAllAsync('SELECT * FROM wallets WHERE user_id = ?', [user.id]));
     setGoals(await db.getAllAsync('SELECT * FROM goals WHERE user_id = ?', [user.id]));
-    setTxs(await db.getAllAsync(`SELECT t.*, c.icon as catIcon, c.color as catColor, w.name as walletName, w.currency as walletCurrency FROM transactions t LEFT JOIN categories c ON t.category_id = c.id LEFT JOIN wallets w ON t.wallet_id = w.id WHERE t.user_id = ? ORDER BY t.timestamp DESC LIMIT 10`, [user.id]));
+    setTxs(await db.getAllAsync(`SELECT t.*, c.icon as catIcon, c.color as catColor, w.name as walletName, w.currency as walletCurrency FROM transactions t LEFT JOIN categories c ON t.category_id = c.id LEFT JOIN wallets w ON t.wallet_id = w.id WHERE t.user_id = ? ORDER BY t.timestamp DESC`, [user.id]));
     
     let rates = {};
     const ratesStr = await getSetting('exchange_rates');
@@ -98,20 +98,16 @@ export default function HomeScreen({ navigation }) {
             <TouchableOpacity onPress={() => navigation.navigate('Wallets')}><Text style={styles.linkText}>Quản lý</Text></TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{paddingLeft: 25}}>
-            {wallets.map(w => {
-               const wInc = txs.filter(t => t.wallet_id === w.id && t.type === 'income').reduce((s,t) => s + t.amount, 0);
-               const wExp = txs.filter(t => t.wallet_id === w.id && t.type === 'expense').reduce((s,t) => s + t.amount, 0);
-               return (
+            {wallets.map(w => (
                 <TouchableOpacity activeOpacity={0.8} key={w.id} style={[styles.walletCard, { backgroundColor: w.color }]}>
                   <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start'}}>
                     <Ionicons name={w.icon} size={28} color="#FFF" style={{marginBottom: 10}} />
                     {w.is_shared === 1 && <View style={{backgroundColor: 'rgba(255,255,255,0.3)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8}}><Text style={{fontSize: 10, color: '#FFF', fontWeight: 'bold'}}>CHUNG</Text></View>}
                   </View>
                   <Text style={styles.walletName} numberOfLines={1}>{w.name}</Text>
-                  <Text style={styles.walletBalance} numberOfLines={1} adjustsFontSizeToFit>{(w.balance + wInc - wExp).toLocaleString()} {w.currency || 'VND'}</Text>
+                  <Text style={styles.walletBalance} numberOfLines={1} adjustsFontSizeToFit>{w.balance.toLocaleString()} {w.currency || 'VND'}</Text>
                 </TouchableOpacity>
-               );
-            })}
+            ))}
           </ScrollView>
         </Animated.View>
 

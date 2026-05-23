@@ -13,6 +13,7 @@ export default function HistoryScreen({ navigation }) {
   const [selectedTx, setSelectedTx] = useState(null);
   
   const loadHist = async () => {
+    if (!user) return;
     // Lấy giao dịch thu/chi/tiết kiệm
     const txs = await db.getAllAsync(`
       SELECT t.*, c.icon as catIcon, c.color as catColor, w.name as walletName 
@@ -59,7 +60,10 @@ export default function HistoryScreen({ navigation }) {
     setHistory(all);
   };
 
-  useEffect(() => { navigation.addListener('focus', loadHist); }, [navigation]);
+  useEffect(() => {
+    const unsub = navigation.addListener('focus', loadHist);
+    return unsub;
+  }, [navigation, user]);
 
   const handleDelete = (item) => {
     if (item.isTransfer) {
@@ -68,7 +72,11 @@ export default function HistoryScreen({ navigation }) {
     Alert.alert("Hoàn tác", `Chắc chắn xóa và hoàn tiền?`, [
       { text: "Hủy", style: "cancel" }, 
       { text: "Xóa", style: "destructive", onPress: async () => { 
+        if (item.type === 'savings' && item.goal_id) {
+          await db.runAsync('UPDATE goals SET saved_amount = MAX(saved_amount - ?, 0) WHERE id = ?', [item.amount || 0, item.goal_id]);
+        }
         await db.runAsync('DELETE FROM transactions WHERE id = ?', [item.id]); 
+        setDetailModal(false);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); 
         loadHist(); 
       }}

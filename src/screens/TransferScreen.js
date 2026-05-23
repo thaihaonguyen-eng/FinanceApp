@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { db, getFormattedDate } from '../services/db';
 import { useUser } from '../context/UserContext';
 import ScreenBackground from '../components/ScreenBackground';
+import { parseMoneyInput } from '../utils/money';
 
 export default function TransferScreen({ navigation }) {
   const { user } = useUser();
@@ -31,8 +32,8 @@ export default function TransferScreen({ navigation }) {
 
   const handleSave = async () => {
     if (!amt) return Alert.alert("Lỗi", "Nhập số tiền cần chuyển!");
-    const amountVal = parseFloat(amt);
-    const feeVal = parseFloat(fee) || 0;
+    const amountVal = parseMoneyInput(amt);
+    const feeVal = parseMoneyInput(fee) || 0;
 
     if (isNaN(amountVal) || amountVal <= 0) {
       return Alert.alert("Lỗi", "Số tiền không hợp lệ!");

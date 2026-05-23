@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { db } from '../services/db';
 import { useUser } from '../context/UserContext';
 import ScreenBackground from '../components/ScreenBackground';
+import { parseMoneyInput } from '../utils/money';
 
 export default function WalletManagerScreen({ navigation }) {
   const { user } = useUser();
@@ -17,7 +18,7 @@ export default function WalletManagerScreen({ navigation }) {
 
   const addWallet = async () => {
     if(!name || !bal) return Alert.alert("Lỗi", "Vui lòng nhập đủ thông tin!");
-    const balVal = parseFloat(bal);
+    const balVal = parseMoneyInput(bal);
     if (isNaN(balVal) || balVal < 0) return Alert.alert("Lỗi", "Số dư ban đầu phải >= 0!");
     await db.runAsync('INSERT INTO wallets (user_id, name, balance, icon, color, currency, is_shared, exclude_from_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [user.id, name, balVal, 'wallet', '#3B82F6', currency, isShared ? 1 : 0, excludeFromTotal ? 1 : 0]);
     setName(''); setBal(''); setCurrency('VND'); setIsShared(false); setExcludeFromTotal(false); load(); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

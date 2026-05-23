@@ -8,6 +8,7 @@ import * as Haptics from 'expo-haptics';
 import { db, getFormattedDate } from '../services/db';
 import { useUser } from '../context/UserContext';
 import ScreenBackground from '../components/ScreenBackground';
+import { parseMoneyInput } from '../utils/money';
 
 export default function GoalManagerScreen({ navigation }) {
   const { user } = useUser();
@@ -31,7 +32,7 @@ export default function GoalManagerScreen({ navigation }) {
 
   const addGoal = async () => {
     if(!name || !target) return Alert.alert("Lỗi", "Vui lòng nhập đủ thông tin!");
-    const targetVal = parseFloat(target);
+    const targetVal = parseMoneyInput(target);
     if (isNaN(targetVal) || targetVal <= 0) return Alert.alert("Lỗi", "Số tiền mục tiêu phải lớn hơn 0!");
     await db.runAsync('INSERT INTO goals (user_id, name, target_amount, saved_amount, icon, color) VALUES (?, ?, ?, 0, ?, ?)', 
       [user.id, name, targetVal, 'star', '#D946EF']);
@@ -52,9 +53,10 @@ export default function GoalManagerScreen({ navigation }) {
 
   // NẠP TIỀN: PHẢI CHỌN VÍ, TRỪ TIỀN TỪ VÍ, GHI GIAO DỊCH
   const confirmDeposit = async () => {
-    if (!depositAmt || isNaN(depositAmt)) return Alert.alert("Lỗi", "Vui lòng nhập số tiền hợp lệ!");
+    if (!depositAmt) return Alert.alert("Lỗi", "Vui lòng nhập số tiền hợp lệ!");
     
-    const amountVal = parseFloat(depositAmt);
+    const amountVal = parseMoneyInput(depositAmt);
+    if (isNaN(amountVal)) return Alert.alert("Lỗi", "Vui lòng nhập số tiền hợp lệ!");
     if (amountVal <= 0) return Alert.alert("Lỗi", "Số tiền phải lớn hơn 0!");
     if (!selWal) return Alert.alert("Lỗi", "Bạn chưa có ví nào! Hãy tạo ví trước.");
 
@@ -72,8 +74,8 @@ export default function GoalManagerScreen({ navigation }) {
       await db.runAsync('UPDATE goals SET saved_amount = saved_amount + ? WHERE id = ?', [amountVal, selectedGoal.id]);
       // Ghi giao dịch savings → Trigger tự động trừ tiền ví
       await db.runAsync(
-        'INSERT INTO transactions (user_id, wallet_id, category_id, title, amount, type, date) VALUES (?, ?, NULL, ?, ?, ?, ?)',
-        [user.id, selWal, `Tiết kiệm: ${selectedGoal.name}`, amountVal, 'savings', getFormattedDate()]
+        'INSERT INTO transactions (user_id, wallet_id, category_id, goal_id, title, amount, type, date) VALUES (?, ?, NULL, ?, ?, ?, ?, ?)',
+        [user.id, selWal, selectedGoal.id, `Tiết kiệm: ${selectedGoal.name}`, amountVal, 'savings', getFormattedDate()]
       );
       setDepositModal(false); 
       setDepositAmt(''); 

@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { db, getFormattedMonth } from '../services/db';
 import { useUser } from '../context/UserContext';
 import ScreenBackground from '../components/ScreenBackground';
+import { parseMoneyInput } from '../utils/money';
 
 export default function BudgetManagerScreen({ navigation }) {
   const { user } = useUser();
@@ -55,8 +56,9 @@ export default function BudgetManagerScreen({ navigation }) {
 
   const addBudget = async () => {
     if (!limit) return Alert.alert("Lỗi", "Vui lòng nhập giới hạn!");
-    const limitVal = parseFloat(limit);
+    const limitVal = parseMoneyInput(limit);
     if (isNaN(limitVal) || limitVal <= 0) return Alert.alert("Lỗi", "Hạn mức phải lớn hơn 0!");
+    if (!selCat) return Alert.alert("Lỗi", "Vui lòng chọn danh mục!");
     
     // Check if budget already exists for this category this month
     const existing = budgets.find(b => b.category_id === selCat);
