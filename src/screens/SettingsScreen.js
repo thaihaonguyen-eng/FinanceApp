@@ -107,7 +107,7 @@ export default function SettingsScreen() {
         
         <View style={styles.profileCard}>
           <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
-            {user.avatar_uri ? <Image source={{ uri: user.avatar_uri }} style={styles.avatar} /> : <View style={[styles.avatar, {backgroundColor: '#4F46E5'}]}><Text style={{color: '#FFF', fontSize: 30, fontWeight: '900'}}>{user.full_name.charAt(0)}</Text></View>}
+            {(user.avatar_uri && user.avatar_uri !== 'null') ? <Image source={{ uri: user.avatar_uri }} style={styles.avatar} /> : <View style={[styles.avatar, {backgroundColor: '#4F46E5'}]}><Text style={{color: '#FFF', fontSize: 30, fontWeight: '900'}}>{user.full_name.charAt(0)}</Text></View>}
             <View style={styles.badge}><Ionicons name="camera" size={14} color="#FFF" /></View>
           </TouchableOpacity>
           <View style={{marginLeft: 20}}><Text style={{fontSize: 22, fontWeight: '900', color: '#1E293B'}}>{user.full_name}</Text><Text style={{color: '#64748B', fontWeight: '600', marginTop: 4}}>UID: {user.username}</Text></View>
