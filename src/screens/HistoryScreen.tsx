@@ -2,62 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, TextInput, SafeAreaView, Alert, Modal, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { db } from '../services/db';
 import { useUser } from '../context/UserContext';
 import ScreenBackground from '../components/ScreenBackground';
+import { StackNavigationProp } from '@react-navigation/stack';
+import type { HistoryItem } from '../types';
+import { deleteHistoryItem, getHistoryItems } from '../services/finance';
 
-export default function HistoryScreen({ navigation }) {
+export default function HistoryScreen({ navigation }: { navigation: StackNavigationProp<any> }) {
   const { user } = useUser();
-  const [history, setHistory] = useState([]); const [query, setQuery] = useState('');
+  const [history, setHistory] = useState<HistoryItem[]>([]); 
+  const [query, setQuery] = useState('');
   const [detailModal, setDetailModal] = useState(false);
-  const [selectedTx, setSelectedTx] = useState(null);
+  const [selectedTx, setSelectedTx] = useState<HistoryItem | null>(null);
   
   const loadHist = async () => {
     if (!user) return;
-    // Lấy giao dịch thu/chi/tiết kiệm
-    const txs = await db.getAllAsync(`
-      SELECT t.*, c.icon as catIcon, c.color as catColor, w.name as walletName 
-      FROM transactions t 
-      LEFT JOIN categories c ON t.category_id = c.id 
-      LEFT JOIN wallets w ON t.wallet_id = w.id 
-      WHERE t.user_id = ? 
-      ORDER BY t.timestamp DESC`, [user.id]);
-
-    // Lấy giao dịch chuyển tiền
-    const trs = await db.getAllAsync(`
-      SELECT tr.*, wf.name as fromWalletName, wt.name as toWalletName 
-      FROM transfers tr 
-      LEFT JOIN wallets wf ON tr.from_wallet_id = wf.id 
-      LEFT JOIN wallets wt ON tr.to_wallet_id = wt.id 
-      WHERE tr.user_id = ? 
-      ORDER BY tr.id DESC`, [user.id]);
-
-    // Gộp chung và format transfers cho hiển thị đồng nhất
-    const formattedTransfers = trs.map(tr => ({
-      id: 'tr_' + tr.id,
-      title: tr.note || `${tr.fromWalletName} → ${tr.toWalletName}`,
-      amount: tr.amount,
-      type: 'transfer',
-      date: tr.date,
-      catIcon: 'swap-horizontal',
-      catColor: '#3B82F6',
-      walletName: `${tr.fromWalletName} → ${tr.toWalletName}`,
-      fee: tr.fee,
-      isTransfer: true,
-    }));
-
-    // Gộp 2 danh sách, sắp xếp theo ngày giảm dần
-    const all = [...txs, ...formattedTransfers].sort((a, b) => {
-      // Parse date dd/mm/yyyy
-      const parseDate = (d) => {
-        if (!d) return 0;
-        const parts = d.split('/');
-        if (parts.length === 3) return new Date(parts[2], parts[1]-1, parts[0]).getTime();
-        return 0;
-      };
-      return parseDate(b.date) - parseDate(a.date);
-    });
-    setHistory(all);
+    setHistory(await getHistoryItems(user.id));
   };
 
   useEffect(() => {
@@ -65,17 +25,14 @@ export default function HistoryScreen({ navigation }) {
     return unsub;
   }, [navigation, user]);
 
-  const handleDelete = (item) => {
+  const handleDelete = (item: HistoryItem) => {
     if (item.isTransfer) {
       return Alert.alert("Thông báo", "Không thể xóa giao dịch chuyển tiền từ lịch sử. Hãy liên hệ phần Cài đặt.");
     }
     Alert.alert("Hoàn tác", `Chắc chắn xóa và hoàn tiền?`, [
       { text: "Hủy", style: "cancel" }, 
       { text: "Xóa", style: "destructive", onPress: async () => { 
-        if (item.type === 'savings' && item.goal_id) {
-          await db.runAsync('UPDATE goals SET saved_amount = MAX(saved_amount - ?, 0) WHERE id = ?', [item.amount || 0, item.goal_id]);
-        }
-        await db.runAsync('DELETE FROM transactions WHERE id = ?', [item.id]); 
+        await deleteHistoryItem(item);
         setDetailModal(false);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); 
         loadHist(); 
@@ -83,12 +40,12 @@ export default function HistoryScreen({ navigation }) {
     ]);
   };
 
-  const openDetail = (item) => {
+  const openDetail = (item: HistoryItem) => {
     setSelectedTx(item);
     setDetailModal(true);
   };
 
-  const getTypeLabel = (type) => {
+  const getTypeLabel = (type: string) => {
     switch(type) {
       case 'income': return { text: 'Thu nhập', color: '#10B981', bg: '#ECFDF5' };
       case 'expense': return { text: 'Chi tiêu', color: '#EF4444', bg: '#FEF2F2' };
@@ -111,7 +68,7 @@ export default function HistoryScreen({ navigation }) {
             const typeInfo = getTypeLabel(item.type);
             return (
               <TouchableOpacity style={styles.item} activeOpacity={0.7} onPress={() => openDetail(item)} onLongPress={() => handleDelete(item)}>
-                <View style={[styles.iconBox, {backgroundColor: item.catColor || '#94A3B8'}]}><Ionicons name={item.catIcon || 'help'} size={22} color="#FFF"/></View>
+                <View style={[styles.iconBox, {backgroundColor: item.catColor || '#94A3B8'}]}><Ionicons name={item.isTransfer ? "swap-horizontal" : (item.catIcon as any) || "help"} size={22} color="#FFF"/></View>
                 <View style={{flex: 1, marginLeft: 15}}>
                   <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
                   <Text style={styles.itemDate}>{item.date} • {item.walletName}</Text>
@@ -120,8 +77,8 @@ export default function HistoryScreen({ navigation }) {
                   <Text style={[styles.itemAmount, {color: typeInfo.color}]}>
                     {item.type==='income'?'+':item.type==='transfer'?'':'−'}{(item.amount || 0).toLocaleString()}đ
                   </Text>
-                  {item.type === 'transfer' && item.fee > 0 && (
-                    <Text style={{fontSize: 11, color: '#94A3B8', marginTop: 2}}>Phí: {item.fee.toLocaleString()}đ</Text>
+                  {item.type === 'transfer' && (item.fee || 0) > 0 && (
+                    <Text style={{fontSize: 13, color: '#94A3B8', marginTop: 3}}>Phí: {(item.fee || 0).toLocaleString()} • Tới {item.toWalletName}</Text>
                   )}
                 </View>
               </TouchableOpacity>
@@ -142,7 +99,7 @@ export default function HistoryScreen({ navigation }) {
               <View>
                 <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 15}}>
                   <View style={[styles.iconBox, {backgroundColor: selectedTx.catColor || '#94A3B8', width: 50, height: 50, borderRadius: 18}]}>
-                    <Ionicons name={selectedTx.catIcon || 'help'} size={26} color="#FFF"/>
+                    <Ionicons name={selectedTx.isTransfer ? "swap-horizontal" : (selectedTx.catIcon as any) || "help"} size={26} color={selectedTx.isTransfer ? '#FFF' : '#FFF'} />
                   </View>
                   <View style={{marginLeft: 15, flex: 1}}>
                     <Text style={{fontSize: 20, fontWeight: '900', color: '#0F172A'}}>{selectedTx.title}</Text>
@@ -157,7 +114,7 @@ export default function HistoryScreen({ navigation }) {
                   <View style={styles.detailRow}><Text style={styles.detailLabel}>Ngày</Text><Text style={styles.detailValue}>{selectedTx.date}</Text></View>
                   <View style={styles.detailRow}><Text style={styles.detailLabel}>Nguồn tiền</Text><Text style={styles.detailValue}>{selectedTx.walletName}</Text></View>
                   {selectedTx.location ? <View style={styles.detailRow}><Text style={styles.detailLabel}>Địa điểm</Text><Text style={styles.detailValue}>{selectedTx.location}</Text></View> : null}
-                  {selectedTx.isTransfer && selectedTx.fee > 0 ? <View style={styles.detailRow}><Text style={styles.detailLabel}>Phí</Text><Text style={styles.detailValue}>{selectedTx.fee.toLocaleString()}đ</Text></View> : null}
+                  {selectedTx.isTransfer && (selectedTx.fee || 0) > 0 ? <View style={styles.detailRow}><Text style={styles.detailLabel}>Phí</Text><Text style={styles.detailValue}>{(selectedTx.fee || 0).toLocaleString()}đ</Text></View> : null}
                 </View>
 
                 {selectedTx.image_uri && (

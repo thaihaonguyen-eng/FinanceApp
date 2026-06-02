@@ -6,19 +6,22 @@ import { db, getFormattedDate } from '../services/db';
 import { useUser } from '../context/UserContext';
 import ScreenBackground from '../components/ScreenBackground';
 import { parseMoneyInput } from '../utils/money';
+import { Wallet } from '../types';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-export default function TransferScreen({ navigation }) {
+export default function TransferScreen({ navigation }: { navigation: StackNavigationProp<any> }) {
   const { user } = useUser();
-  const [wallets, setWallets] = useState([]);
-  const [fromWal, setFromWal] = useState(null);
-  const [toWal, setToWal] = useState(null);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [fromWal, setFromWal] = useState<number | null>(null);
+  const [toWal, setToWal] = useState<number | null>(null);
   const [amt, setAmt] = useState('');
   const [fee, setFee] = useState('0');
   const [note, setNote] = useState('');
 
   useEffect(() => {
     const loadF = async () => {
-      const w = await db.getAllAsync('SELECT * FROM wallets WHERE user_id = ?', [user.id]);
+      if (!user) return;
+      const w = await db.getAllAsync<Wallet>('SELECT * FROM wallets WHERE user_id = ?', [user.id]);
       setWallets(w);
       if(w.length >= 2) {
         setFromWal(w[0].id);
@@ -32,6 +35,7 @@ export default function TransferScreen({ navigation }) {
 
   const handleSave = async () => {
     if (!amt) return Alert.alert("Lỗi", "Nhập số tiền cần chuyển!");
+    if (!user) return;
     const amountVal = parseMoneyInput(amt);
     const feeVal = parseMoneyInput(fee) || 0;
 
@@ -62,7 +66,7 @@ export default function TransferScreen({ navigation }) {
       
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.goBack();
-    } catch (e) {
+    } catch (e: any) {
       Alert.alert("Lỗi", e.message);
     }
   };
@@ -81,7 +85,7 @@ export default function TransferScreen({ navigation }) {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginBottom: 15}}>
               {wallets.map(w => (
                 <TouchableOpacity key={w.id} onPress={()=>setFromWal(w.id)} style={[styles.chipWal, fromWal===w.id && {borderColor: '#F43F5E', backgroundColor: '#FFF1F2'}]}>
-                  <Ionicons name={w.icon} size={18} color={w.color} style={{marginRight:5}}/>
+                  <Ionicons name={w.icon as any} size={18} color={w.color} style={{marginRight:5}}/>
                   <Text style={{color: '#1E293B', fontWeight: '800'}}>{w.name}</Text>
                 </TouchableOpacity>
               ))}
@@ -97,7 +101,7 @@ export default function TransferScreen({ navigation }) {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginBottom: 25}}>
               {wallets.map(w => (
                 <TouchableOpacity key={w.id} onPress={()=>setToWal(w.id)} style={[styles.chipWal, toWal===w.id && {borderColor: '#10B981', backgroundColor: '#ECFDF5'}]}>
-                  <Ionicons name={w.icon} size={18} color={w.color} style={{marginRight:5}}/>
+                  <Ionicons name={w.icon as any} size={18} color={w.color} style={{marginRight:5}}/>
                   <Text style={{color: '#1E293B', fontWeight: '800'}}>{w.name}</Text>
                 </TouchableOpacity>
               ))}

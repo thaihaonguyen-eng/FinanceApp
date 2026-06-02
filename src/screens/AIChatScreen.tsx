@@ -5,15 +5,22 @@ import { db } from '../services/db';
 import { generateAIResponse } from '../services/ai';
 import { useUser } from '../context/UserContext';
 import ScreenBackground from '../components/ScreenBackground';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-export default function AIChatScreen({ navigation }) {
+interface ChatMessage {
+  id: string;
+  text: string;
+  isAi: boolean;
+}
+
+export default function AIChatScreen({ navigation }: { navigation: StackNavigationProp<any> }) {
   const { user } = useUser();
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     { id: '1', text: 'Chào bạn! Mình là Trợ lý AI Tài chính. (Hãy cài đặt mã Gemini API Key trong phần Cài đặt trước nhé). \n\nMình có thể giúp gì cho bạn hôm nay?', isAi: true }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const listRef = useRef();
+  const listRef = useRef<FlatList<ChatMessage>>(null);
 
   const handleSend = async () => {
     if(!input.trim() || loading) return;
@@ -22,6 +29,7 @@ export default function AIChatScreen({ navigation }) {
     const newMsgs = [...messages, { id: Date.now().toString(), text: userText, isAi: false }];
     setMessages(newMsgs);
     setLoading(true);
+    if (!user) return;
 
     const txs = await db.getAllAsync(`SELECT t.title, t.amount, t.type, t.date, c.name as categoryName FROM transactions t LEFT JOIN categories c ON t.category_id = c.id WHERE t.user_id = ? ORDER BY t.timestamp DESC LIMIT 10`, [user.id]);
     

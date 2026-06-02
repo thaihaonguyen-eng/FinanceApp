@@ -1,4 +1,4 @@
-export const parseMoneyInput = (value) => {
+export const parseMoneyInput = (value: string | number | null | undefined): number => {
   if (typeof value === 'number') return value;
   const raw = String(value || '').trim().replace(/\s/g, '');
   if (!raw) return NaN;
@@ -7,7 +7,7 @@ export const parseMoneyInput = (value) => {
   const lastComma = normalized.lastIndexOf(',');
   const lastDot = normalized.lastIndexOf('.');
 
-  let decimalSeparator = null;
+  let decimalSeparator: string | null = null;
   if (lastComma !== -1 && lastDot !== -1) {
     decimalSeparator = lastComma > lastDot ? ',' : '.';
   } else if (lastComma !== -1) {
@@ -27,4 +27,32 @@ export const parseMoneyInput = (value) => {
 
   const parsed = Number(cleaned);
   return Number.isFinite(parsed) ? parsed : NaN;
+};
+
+export const formatCurrency = (amount: number, currency: string = 'VND'): string => {
+  if (currency === 'VND') {
+    return amount.toLocaleString('vi-VN') + 'đ';
+  }
+  return amount.toLocaleString('en-US', {
+    style: 'currency',
+    currency: currency,
+  });
+};
+
+export const getExchangeRate = (currency: string | undefined, exchangeRates?: Record<string, number>): number => {
+  if (!currency || currency === 'VND') return 1;
+  if (exchangeRates && exchangeRates[currency] && exchangeRates['VND']) {
+    return exchangeRates['VND'] / exchangeRates[currency];
+  }
+  // Fallback rates
+  switch (currency) {
+    case 'USD': return 25400;
+    case 'EUR': return 27500;
+    case 'JPY': return 165;
+    default: return 1;
+  }
+};
+
+export const convertToVND = (amount: number, currency: string | undefined, exchangeRates?: Record<string, number>): number => {
+  return amount * getExchangeRate(currency, exchangeRates);
 };

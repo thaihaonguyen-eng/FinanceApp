@@ -29,12 +29,12 @@ const slides = [
   }
 ];
 
-export default function OnboardingScreen({ onFinish }) {
+export default function OnboardingScreen({ onFinish }: { onFinish: () => void }) {
   const scrollX = useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0);
-  const slidesRef = useRef(null);
+  const slidesRef = useRef<Animated.FlatList<typeof slides[number]>>(null);
 
-  const viewableItemsChanged = useRef(({ viewableItems }) => {
+  const viewableItemsChanged = useRef(({ viewableItems }: { viewableItems: any[] }) => {
     if (viewableItems && viewableItems.length > 0) {
       setCurrentIndex(viewableItems[0].index);
     }
@@ -45,14 +45,14 @@ export default function OnboardingScreen({ onFinish }) {
   const scrollToNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (currentIndex < slides.length - 1) {
-      slidesRef.current.scrollToIndex({ index: currentIndex + 1 });
+      slidesRef.current?.scrollToIndex({ index: currentIndex + 1 });
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       onFinish();
     }
   };
 
-  const renderItem = ({ item }) => {
+  const renderItem = ({ item }: { item: typeof slides[number] }) => {
     return (
       <View style={[styles.slide, { width }]}>
         <View style={styles.imageContainer}>

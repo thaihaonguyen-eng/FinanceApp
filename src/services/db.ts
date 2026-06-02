@@ -2,10 +2,17 @@ import * as SQLite from 'expo-sqlite';
 
 export const db = SQLite.openDatabaseSync('finance_team_pro_2026.db');
 
-export const getFormattedDate = () => { const d = new Date(); return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear(); };
-export const getFormattedMonth = () => { const d = new Date(); return ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear(); };
+export const getFormattedDate = (): string => { 
+  const d = new Date(); 
+  return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear(); 
+};
 
-export const initDB = async () => {
+export const getFormattedMonth = (): string => { 
+  const d = new Date(); 
+  return ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear(); 
+};
+
+export const initDB = async (): Promise<void> => {
   await db.execAsync(`
     PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;
     CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT, full_name TEXT, avatar_uri TEXT);
@@ -75,22 +82,22 @@ export const initDB = async () => {
   }
 };
 
-export const getSetting = async (key) => {
-  const res = await db.getFirstAsync('SELECT value FROM settings WHERE key = ?', [key]);
+export const getSetting = async (key: string): Promise<string | null> => {
+  const res = await db.getFirstAsync<{ value: string }>('SELECT value FROM settings WHERE key = ?', [key]);
   return res ? res.value : null;
 };
 
-export const setSetting = async (key, value) => {
+export const setSetting = async (key: string, value: string): Promise<void> => {
   await db.runAsync('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
 };
 
-export const fetchExchangeRates = async () => {
+export const fetchExchangeRates = async (): Promise<Record<string, number> | null> => {
   try {
     const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
     const data = await res.json();
     if (data && data.rates && data.rates.VND) {
       await setSetting('exchange_rates', JSON.stringify(data.rates));
-      return data.rates;
+      return data.rates as Record<string, number>;
     }
   } catch (error) {
     console.error("Lỗi lấy tỷ giá:", error);

@@ -1,22 +1,17 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { db } from '../services/db';
 import ScreenBackground from '../components/ScreenBackground';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { registerLocalUser } from '../services/auth';
 
-import * as Crypto from 'expo-crypto';
-
-export default function RegisterScreen({ navigation }) {
+export default function RegisterScreen({ navigation }: { navigation: StackNavigationProp<any> }) {
   const [user, setUser] = useState(''); const [pass, setPass] = useState(''); const [name, setName] = useState('');
   
   const handleRegister = async () => {
     if(!user || !pass || !name) return Alert.alert("Lỗi", "Nhập đủ thông tin!");
     try { 
-      const hashedPass = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, pass);
-      const result = await db.runAsync('INSERT INTO users (username, password, full_name) VALUES (?, ?, ?)', [user, hashedPass, name]);
-      const newId = result.lastInsertRowId;
-      await db.runAsync("INSERT INTO wallets (user_id, name, balance, icon, color) VALUES (?, 'Tiền mặt', 0, 'wallet', '#F59E0B')", [newId]);
-      await db.runAsync("INSERT INTO goals (user_id, name, target_amount, saved_amount, icon, color) VALUES (?, 'Quỹ dự phòng', 20000000, 0, 'shield-checkmark', '#10B981')", [newId]);
+      await registerLocalUser(user, pass, name);
       Alert.alert("Thành công", "Tạo tài khoản thành công!"); navigation.goBack();
     } catch (e) { Alert.alert("Lỗi", "Tài khoản đã tồn tại!"); }
   };

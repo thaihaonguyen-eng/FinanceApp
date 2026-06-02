@@ -6,17 +6,23 @@ import { db } from '../services/db';
 import { useUser } from '../context/UserContext';
 import ScreenBackground from '../components/ScreenBackground';
 import { parseMoneyInput } from '../utils/money';
+import { Wallet } from '../types';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-export default function WalletManagerScreen({ navigation }) {
+export default function WalletManagerScreen({ navigation }: { navigation: StackNavigationProp<any> }) {
   const { user } = useUser();
-  const [wallets, setWallets] = useState([]); const [name, setName] = useState(''); const [bal, setBal] = useState('');
+  const [wallets, setWallets] = useState<Wallet[]>([]); const [name, setName] = useState(''); const [bal, setBal] = useState('');
   const [currency, setCurrency] = useState('VND'); const [isShared, setIsShared] = useState(false);
   const [excludeFromTotal, setExcludeFromTotal] = useState(false);
   
-  const load = async () => setWallets(await db.getAllAsync('SELECT * FROM wallets WHERE user_id = ?', [user.id]));
+  const load = async () => {
+    if (!user) return;
+    setWallets(await db.getAllAsync<Wallet>('SELECT * FROM wallets WHERE user_id = ?', [user.id]));
+  };
   useEffect(() => { load(); }, []);
 
   const addWallet = async () => {
+    if (!user) return;
     if(!name || !bal) return Alert.alert("Lỗi", "Vui lòng nhập đủ thông tin!");
     const balVal = parseMoneyInput(bal);
     if (isNaN(balVal) || balVal < 0) return Alert.alert("Lỗi", "Số dư ban đầu phải >= 0!");
@@ -24,7 +30,7 @@ export default function WalletManagerScreen({ navigation }) {
     setName(''); setBal(''); setCurrency('VND'); setIsShared(false); setExcludeFromTotal(false); load(); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
-  const deleteWallet = (id) => {
+  const deleteWallet = (id: number) => {
     Alert.alert("Xác nhận", "Bạn có chắc chắn muốn xóa ví này?", [
       { text: "Hủy", style: "cancel" },
       { text: "Xóa", style: "destructive", onPress: async () => {
@@ -63,7 +69,7 @@ export default function WalletManagerScreen({ navigation }) {
         </View>
         <FlatList data={wallets} keyExtractor={i=>i.id.toString()} contentContainerStyle={{paddingHorizontal: 25}} renderItem={({item}) => (
           <View style={styles.item}>
-            <Ionicons name={item.icon} size={30} color={item.color} style={{marginRight: 20}}/>
+            <Ionicons name={item.icon as any} size={30} color={item.color} style={{marginRight: 20}}/>
             <View style={{flex: 1}}>
               <Text style={{fontSize: 18, fontWeight: '800'}}>{item.name}</Text>
               <Text style={{fontSize: 16, color: '#64748B', marginTop: 5}}>{item.balance.toLocaleString()} {item.currency}</Text>

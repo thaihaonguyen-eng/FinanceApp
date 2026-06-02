@@ -1,14 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { StatusBar, TouchableOpacity, StyleSheet, Animated, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
+import * as SplashScreen from 'expo-splash-screen';
 
 import { initDB } from './src/services/db';
 import { UserProvider, useUser } from './src/context/UserContext';
+
+SplashScreen.preventAutoHideAsync();
 
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
@@ -23,6 +26,8 @@ import AIChatScreen from './src/screens/AIChatScreen';
 import TransferScreen from './src/screens/TransferScreen';
 import BudgetManagerScreen from './src/screens/BudgetManagerScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
+import CategoryManagerScreen from './src/screens/CategoryManagerScreen';
+import RecurringPlansScreen from './src/screens/RecurringPlansScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -46,7 +51,9 @@ function MainTabs() {
   );
 }
 
-const TAB_META = {
+type TabName = 'Home' | 'Statistics' | 'AddAction' | 'History' | 'Settings';
+
+const TAB_META: Record<TabName, { label: string; icon: keyof typeof Ionicons.prototype.props.name }> = {
   Home: { label: 'Home', icon: 'home' },
   Statistics: { label: 'Stats', icon: 'pulse' },
   AddAction: { label: 'Add', icon: 'add-circle' },
@@ -54,7 +61,7 @@ const TAB_META = {
   Settings: { label: 'Settings', icon: 'cog' },
 };
 
-function AppTabBar({ state, descriptors, navigation }) {
+function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   return (
     <View pointerEvents="box-none" style={styles.tabBarOuter}>
       <View style={styles.tabBarShadow}>
@@ -63,7 +70,7 @@ function AppTabBar({ state, descriptors, navigation }) {
             {state.routes.map((route, index) => {
               const options = descriptors[route.key].options;
               const focused = state.index === index;
-              const meta = TAB_META[route.name] || { label: options.title || route.name, icon: 'ellipse' };
+              const meta = TAB_META[route.name as TabName] || { label: options.title || route.name, icon: 'ellipse' };
 
               const onPress = () => {
                 if (route.name === 'AddAction') {
@@ -92,7 +99,6 @@ function AppTabBar({ state, descriptors, navigation }) {
                   label={meta.label}
                   isAction={route.name === 'AddAction'}
                   accessibilityLabel={options.tabBarAccessibilityLabel}
-                  testID={options.tabBarTestID}
                   onPress={onPress}
                 />
               );
@@ -104,7 +110,17 @@ function AppTabBar({ state, descriptors, navigation }) {
   );
 }
 
-function TabBarItem({ focused, icon, label, isAction, accessibilityLabel, testID, onPress }) {
+interface TabBarItemProps {
+  focused: boolean;
+  icon: any;
+  label: string;
+  isAction: boolean;
+  accessibilityLabel?: string;
+  testID?: string;
+  onPress: () => void;
+}
+
+function TabBarItem({ focused, icon, label, isAction, accessibilityLabel, testID, onPress }: TabBarItemProps) {
   const scale = useRef(new Animated.Value(1)).current;
   const color = focused || isAction ? '#4F46E5' : '#8EA0BA';
   const iconName = focused ? icon : `${icon}-outline`;
@@ -141,20 +157,43 @@ function EmptyTabScreen() {
 function AppNavigator() {
   const { user } = useUser();
   const [showOnboarding, setShowOnboarding] = useState(true);
+  const [appIsReady, setAppIsReady] = useState(false);
 
-  useEffect(() => { initDB(); }, []);
+  useEffect(() => {
+    async function prepare() {
+      try {
+        await initDB();
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setAppIsReady(true);
+      }
+    }
+    prepare();
+  }, []);
+
+  const onLayoutRootView = useCallback(async () => {
+    if (appIsReady) {
+      await SplashScreen.hideAsync();
+    }
+  }, [appIsReady]);
+
+  if (!appIsReady) {
+    return null;
+  }
 
   if (showOnboarding) {
     return (
-      <>
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
         <StatusBar barStyle="dark-content" />
         <OnboardingScreen onFinish={() => setShowOnboarding(false)} />
-      </>
+      </View>
     );
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer onReady={onLayoutRootView}>
       <StatusBar barStyle="dark-content" />
       {user ? (
         <Stack.Navigator key="app" screenOptions={{ headerShown: false, presentation: 'modal' }}>
@@ -164,6 +203,8 @@ function AppNavigator() {
           <Stack.Screen name="Goals" component={GoalManagerScreen} />
           <Stack.Screen name="Transfer" component={TransferScreen} />
           <Stack.Screen name="Budget" component={BudgetManagerScreen} />
+          <Stack.Screen name="CategoryManager" component={CategoryManagerScreen} />
+          <Stack.Screen name="RecurringPlans" component={RecurringPlansScreen} />
           <Stack.Screen name="AIChat" component={AIChatScreen} />
         </Stack.Navigator>
       ) : (
@@ -199,7 +240,7 @@ const styles = StyleSheet.create({
     shadowColor: '#0F172A',
     shadowOpacity: 0.14,
     shadowRadius: 18,
-    shadowOffset: { height: 8 },
+    shadowOffset: { width: 0, height: 8 },
     elevation: 18,
   },
   tabBarBlur: {

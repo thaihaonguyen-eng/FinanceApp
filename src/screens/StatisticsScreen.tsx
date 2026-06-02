@@ -6,31 +6,47 @@ import { Dimensions } from 'react-native';
 import { db, getFormattedMonth, getSetting, fetchExchangeRates } from '../services/db';
 import { useUser } from '../context/UserContext';
 import ScreenBackground from '../components/ScreenBackground';
+import { convertToVND } from '../utils/money';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 const screenWidth = Dimensions.get("window").width;
 
-export default function StatisticsScreen({ navigation }) {
+interface ChartDataItem {
+  name: string;
+  population: number;
+  color: string;
+  legendFontColor: string;
+  legendFontSize: number;
+}
+
+interface CategoryExpense {
+  name: string;
+  color: string;
+  amount: number;
+  walletCurrency: string;
+}
+
+interface DailyExpense {
+  date: string;
+  amount: number;
+  walletCurrency: string;
+}
+
+export default function StatisticsScreen({ navigation }: { navigation: StackNavigationProp<any> }) {
   const { user } = useUser();
-  const [chart, setChart] = useState([]); const [prediction, setPrediction] = useState(0);
+  const [chart, setChart] = useState<ChartDataItem[]>([]); const [prediction, setPrediction] = useState(0);
 
   useEffect(() => { 
-    navigation.addListener('focus', async () => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      if (!user) return;
       // Tải tỷ giá
-      let rates = {};
+      let rates: Record<string, number> = {};
       const ratesStr = await getSetting('exchange_rates');
       if (ratesStr) rates = JSON.parse(ratesStr);
       else rates = await fetchExchangeRates() || {};
 
-      const getRate = (cur) => {
-        if (cur === 'VND' || !cur) return 1;
-        if (rates[cur] && rates['VND']) {
-          return rates['VND'] / rates[cur];
-        }
-        switch(cur) { case 'USD': return 25400; case 'EUR': return 27500; default: return 1; }
-      };
-
       // Biểu đồ danh mục - quy đổi sang VND
-      const data = await db.getAllAsync(
+      const data = await db.getAllAsync<CategoryExpense>(
         `SELECT c.name, c.color, t.amount, w.currency as walletCurrency
          FROM transactions t 
          JOIN categories c ON t.category_id = c.id 
@@ -38,9 +54,9 @@ export default function StatisticsScreen({ navigation }) {
          WHERE t.user_id = ? AND t.type = 'expense'`, [user.id]);
 
       // Group by category name & sum with currency conversion
-      const catMap = {};
+      const catMap: Record<string, { total: number; color: string }> = {};
       data.forEach(r => {
-        const converted = r.amount * getRate(r.walletCurrency);
+        const converted = convertToVND(r.amount, r.walletCurrency, rates);
         if (!catMap[r.name]) {
           catMap[r.name] = { total: 0, color: r.color };
         }
@@ -55,7 +71,7 @@ export default function StatisticsScreen({ navigation }) {
       
       // Dự phóng chi tiêu - quy đổi sang VND
       const currentMonth = getFormattedMonth();
-      const txs = await db.getAllAsync(
+      const txs = await db.getAllAsync<DailyExpense>(
         `SELECT t.date, t.amount, w.currency as walletCurrency
          FROM transactions t
          LEFT JOIN wallets w ON t.wallet_id = w.id
@@ -63,10 +79,10 @@ export default function StatisticsScreen({ navigation }) {
 
       const monthlyTxs = txs.filter(t => t.date.includes(currentMonth));
       
-      let dailyData = {};
+      let dailyData: Record<number, number> = {};
       monthlyTxs.forEach(t => {
          const day = parseInt(t.date.split('/')[0], 10);
-         const converted = t.amount * getRate(t.walletCurrency);
+         const converted = convertToVND(t.amount, t.walletCurrency, rates);
          dailyData[day] = (dailyData[day] || 0) + converted;
       });
       
@@ -81,8 +97,9 @@ export default function StatisticsScreen({ navigation }) {
       const wmaAvg = totalWeight > 0 ? (weightedSum / totalWeight) : 0;
       const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
       setPrediction(wmaAvg * daysInMonth);
-    }); 
-  }, [navigation]);
+    });
+    return unsubscribe;
+  }, [navigation, user]);
 
   return (
     <ScreenBackground>

@@ -6,25 +6,45 @@ import { db, getFormattedMonth } from '../services/db';
 import { useUser } from '../context/UserContext';
 import ScreenBackground from '../components/ScreenBackground';
 import { parseMoneyInput } from '../utils/money';
+import { Category } from '../types';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-export default function BudgetManagerScreen({ navigation }) {
+interface BudgetItem {
+  id: number;
+  user_id: number;
+  category_id: number;
+  amount_limit: number;
+  month_year: string;
+  catName: string;
+  catIcon: string;
+  catColor: string;
+  spent: number;
+}
+
+interface SpentByCategory {
+  category_id: number;
+  total_spent: number;
+}
+
+export default function BudgetManagerScreen({ navigation }: { navigation: StackNavigationProp<any> }) {
   const { user } = useUser();
-  const [budgets, setBudgets] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [budgets, setBudgets] = useState<BudgetItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [showModal, setShowModal] = useState(false);
   
-  const [selCat, setSelCat] = useState(null);
+  const [selCat, setSelCat] = useState<number | null>(null);
   const [limit, setLimit] = useState('');
   const currentMonth = getFormattedMonth(); // vd: 05/2026
 
   const loadData = async () => {
+    if (!user) return;
     // Tải danh mục chi phí
-    const cats = await db.getAllAsync('SELECT * FROM categories WHERE type = "expense"');
+    const cats = await db.getAllAsync<Category>('SELECT * FROM categories WHERE type = "expense"');
     setCategories(cats);
     if(cats.length > 0 && !selCat) setSelCat(cats[0].id);
 
     // Tải ngân sách tháng này
-    const bs = await db.getAllAsync(`
+    const bs = await db.getAllAsync<Omit<BudgetItem, 'spent'>>(`
       SELECT b.*, c.name as catName, c.icon as catIcon, c.color as catColor 
       FROM budgets b 
       JOIN categories c ON b.category_id = c.id 
@@ -32,14 +52,14 @@ export default function BudgetManagerScreen({ navigation }) {
     `, [user.id, currentMonth]);
 
     // Tính tổng đã chi cho ngân sách đó
-    const txs = await db.getAllAsync(`
+    const txs = await db.getAllAsync<SpentByCategory>(`
       SELECT category_id, SUM(amount) as total_spent 
       FROM transactions 
       WHERE user_id = ? AND type = 'expense' AND date LIKE ? 
       GROUP BY category_id
     `, [user.id, `%${currentMonth}%`]);
 
-    const txMap = {};
+    const txMap: Record<number, number> = {};
     txs.forEach(t => txMap[t.category_id] = t.total_spent);
 
     const enrichedBudgets = bs.map(b => ({
@@ -55,6 +75,7 @@ export default function BudgetManagerScreen({ navigation }) {
   }, []);
 
   const addBudget = async () => {
+    if (!user) return;
     if (!limit) return Alert.alert("Lỗi", "Vui lòng nhập giới hạn!");
     const limitVal = parseMoneyInput(limit);
     if (isNaN(limitVal) || limitVal <= 0) return Alert.alert("Lỗi", "Hạn mức phải lớn hơn 0!");
@@ -74,7 +95,7 @@ export default function BudgetManagerScreen({ navigation }) {
     loadData();
   };
 
-  const deleteBudget = (id) => {
+  const deleteBudget = (id: number) => {
     Alert.alert("Xóa", "Bạn muốn xóa hạn mức này?", [
       { text: "Hủy", style: "cancel" },
       { text: "Xóa", style: "destructive", onPress: async () => {
@@ -110,7 +131,7 @@ export default function BudgetManagerScreen({ navigation }) {
                 <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
                   <View style={{flexDirection: 'row', alignItems: 'center'}}>
                     <View style={[styles.iconBox, {backgroundColor: item.catColor + '20'}]}>
-                      <Ionicons name={item.catIcon} size={24} color={item.catColor} />
+                      <Ionicons name={item.catIcon as any} size={28} color={item.catColor} />
                     </View>
                     <Text style={{fontSize: 18, fontWeight: '900', color: '#1E293B', marginLeft: 15}}>{item.catName}</Text>
                   </View>
@@ -152,7 +173,7 @@ export default function BudgetManagerScreen({ navigation }) {
               style={{marginBottom: 20}}
               renderItem={({item}) => (
                 <TouchableOpacity onPress={() => setSelCat(item.id)} style={[styles.chip, selCat===item.id && {backgroundColor: item.color}]}>
-                  <Ionicons name={item.icon} size={18} color={selCat===item.id?'#FFF':'#64748B'} style={{marginRight:5}}/>
+                  <Ionicons name={item.icon as any} size={18} color={selCat===item.id?'#FFF':'#64748B'} style={{marginRight:5}}/>
                   <Text style={{color: selCat===item.id?'#FFF':'#64748B', fontWeight: '800'}}>{item.name}</Text>
                 </TouchableOpacity>
               )}

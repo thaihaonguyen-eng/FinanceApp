@@ -1,9 +1,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
-export const generateAIResponse = async (userMessage, contextData) => {
+export const generateAIResponse = async (userMessage: string, contextData: any) => {
   try {
-    const apiKey = await AsyncStorage.getItem('gemini_api_key');
+    const apiKey = await SecureStore.getItemAsync('gemini_api_key');
     if (!apiKey || apiKey.trim() === "") {
       return "Tôi chưa thể trả lời vì bạn chưa cung cấp **Mã API Key (Gemini)**.\n\nVui lòng vào mục Cài đặt (Settings) -> Dán API Key vào để kích hoạt tự vấn.";
     }
@@ -23,7 +23,7 @@ Hãy trả lời thật ngắn gọn, tự nhiên, mang tính chuyên môn nhưn
     const result = await model.generateContent(prompt);
     const response = result.response;
     return response.text();
-  } catch (error) {
+  } catch (error: any) {
     console.error("Lỗi AI Chi tiết:", error);
     let errorMsg = error.message || "";
     if (errorMsg.includes("API_KEY_INVALID")) return "Lỗi: **Mã API Key không hợp lệ**. Bạn hãy kiểm tra và dán lại mã chính xác nhé.";

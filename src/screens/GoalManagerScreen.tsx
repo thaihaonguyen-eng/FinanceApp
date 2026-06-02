@@ -9,28 +9,32 @@ import { db, getFormattedDate } from '../services/db';
 import { useUser } from '../context/UserContext';
 import ScreenBackground from '../components/ScreenBackground';
 import { parseMoneyInput } from '../utils/money';
+import { Wallet, Goal } from '../types';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-export default function GoalManagerScreen({ navigation }) {
+export default function GoalManagerScreen({ navigation }: { navigation: StackNavigationProp<any> }) {
   const { user } = useUser();
-  const [goals, setGoals] = useState([]); 
+  const [goals, setGoals] = useState<Goal[]>([]); 
   const [name, setName] = useState(''); 
   const [target, setTarget] = useState('');
   
   const [depositModal, setDepositModal] = useState(false);
-  const [selectedGoal, setSelectedGoal] = useState(null);
+  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [depositAmt, setDepositAmt] = useState('');
-  const [wallets, setWallets] = useState([]);
-  const [selWal, setSelWal] = useState(null);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [selWal, setSelWal] = useState<number | null>(null);
 
   const load = async () => {
-    setGoals(await db.getAllAsync('SELECT * FROM goals WHERE user_id = ?', [user.id]));
-    const w = await db.getAllAsync('SELECT * FROM wallets WHERE user_id = ?', [user.id]);
+    if (!user) return;
+    setGoals(await db.getAllAsync<Goal>('SELECT * FROM goals WHERE user_id = ?', [user.id]));
+    const w = await db.getAllAsync<Wallet>('SELECT * FROM wallets WHERE user_id = ?', [user.id]);
     setWallets(w);
     if(w.length && !selWal) setSelWal(w[0].id);
   };
   useEffect(() => { load(); }, []);
 
   const addGoal = async () => {
+    if (!user) return;
     if(!name || !target) return Alert.alert("Lỗi", "Vui lòng nhập đủ thông tin!");
     const targetVal = parseMoneyInput(target);
     if (isNaN(targetVal) || targetVal <= 0) return Alert.alert("Lỗi", "Số tiền mục tiêu phải lớn hơn 0!");
@@ -40,7 +44,7 @@ export default function GoalManagerScreen({ navigation }) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
-  const deleteGoal = (id) => {
+  const deleteGoal = (id: number) => {
     Alert.alert("Xác nhận", "Bạn có chắc chắn muốn xóa mục tiêu này?", [
       { text: "Hủy", style: "cancel" },
       { text: "Xóa", style: "destructive", onPress: async () => {
@@ -53,6 +57,7 @@ export default function GoalManagerScreen({ navigation }) {
 
   // NẠP TIỀN: PHẢI CHỌN VÍ, TRỪ TIỀN TỪ VÍ, GHI GIAO DỊCH
   const confirmDeposit = async () => {
+    if (!selectedGoal || !user) return;
     if (!depositAmt) return Alert.alert("Lỗi", "Vui lòng nhập số tiền hợp lệ!");
     
     const amountVal = parseMoneyInput(depositAmt);
@@ -81,7 +86,7 @@ export default function GoalManagerScreen({ navigation }) {
       setDepositAmt(''); 
       load();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch(e) {
+    } catch(e: any) {
       Alert.alert("Lỗi", "Không thể nạp tiền: " + e.message);
     }
   };
@@ -147,7 +152,7 @@ export default function GoalManagerScreen({ navigation }) {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginBottom: 15}}>
               {wallets.map(w => (
                 <TouchableOpacity key={w.id} onPress={()=>setSelWal(w.id)} style={[styles.chipWal, selWal===w.id && {borderColor: '#4F46E5', backgroundColor: '#EEF2FF'}]}>
-                  <Ionicons name={w.icon} size={18} color={w.color} style={{marginRight:5}}/>
+                  <Ionicons name={w.icon as any} size={30} color={w.color} style={{marginRight: 20}}/>
                   <Text style={{color: '#1E293B', fontWeight: '800'}}>{w.name} ({w.balance.toLocaleString()}đ)</Text>
                 </TouchableOpacity>
               ))}
